@@ -92,6 +92,7 @@ def get_data(args):
 class Restrictase:
     enzyme: object
     site_ind: int
+    site_dist: int=0
 
 #проверка наличия сайтов рестрикции для каждой рестриктазы по-отдельности
 #на вход принимает последовательность (донор/вектор) и рестриктазу, vec - вектор ли (нужно для вывода сообщения)
@@ -137,14 +138,18 @@ def check_all_restrictases (vec_seq, don_seq, v_1, v_2, d_1, d_2):
 #а правая с правой. Для начала определяю левые и правые рестриктазы
 def define_left_and_right_restrictase (rest1, rest2, seq):
     if rest1.site_ind > rest2.site_ind:
-        if (rest2.site_ind+len(seq)-rest1.site_ind) < (rest1.site_ind-rest2.site_ind): 
+        if (rest2.site_ind+len(seq)-rest1.site_ind) < (rest1.site_ind-rest2.site_ind):
+            rest1.site_dist, rest2.site_dist =  rest2.site_ind+len(seq)-rest1.site_ind,rest2.site_ind+len(seq)-rest1.site_ind
             return (rest1, rest2)
         else:
+            rest1.site_dist, rest2.site_dist =  rest1.site_ind-rest2.site_ind, rest1.site_ind-rest2.site_ind
             return (rest2, rest1)
     else:
-        if (rest1.site_ind+len(seq)-rest2.site_ind) < (rest2.site_ind-rest1.site_ind): 
+        if (rest1.site_ind+len(seq)-rest2.site_ind) < (rest2.site_ind-rest1.site_ind):
+            rest1.site_dist, rest2.site_dist =  rest1.site_ind+len(seq)-rest2.site_ind,rest1.site_ind+len(seq)-rest2.site_ind
             return (rest2, rest1)
         else:
+            rest1.site_dist, rest2.site_dist =  rest2.site_ind-rest1.site_ind,rest2.site_ind-rest1.site_ind
             return (rest1, rest2)
 
 #для проверки совместимости использую оператор % из BioPython, проверяет можно ли лигировать концы получаемые парой рестриктаз
@@ -153,7 +158,7 @@ def check_compatibility (v_1, v_2, d_1, d_2, vec_seq, don_seq):
     d_l, d_r = define_left_and_right_restrictase(d_1, d_2, don_seq)
 
     #контроль расстояния между сайтами
-    if (v_r.site_ind - v_l.site_ind-len(v_l.enzyme.site)) <5 or (d_r.site_ind - d_l.site_ind-len(d_l.enzyme.site)) <5:
+    if v_r.site_dist <5 or d_r.site_dist <5:
         raise ValueError("Сайты некоторых рестриктаз расположены слишком близко друг к другу")
 
     if v_r.enzyme % d_r.enzyme and v_l.enzyme % d_l.enzyme:
