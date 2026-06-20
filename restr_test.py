@@ -135,16 +135,22 @@ def check_all_restrictases (vec_seq, don_seq, v_1, v_2, d_1, d_2):
 
 #проверка совместимости. Чтобы вставилось в той же ориентации левая рестриктаза должна давать совместимые сайты с левой,
 #а правая с правой. Для начала определяю левые и правые рестриктазы
-def define_left_and_right_restrictase (rest1, rest2):
+def define_left_and_right_restrictase (rest1, rest2, seq):
     if rest1.site_ind > rest2.site_ind:
-        return (rest2, rest1)
+        if (rest2.site_ind+len(seq)-rest1.site_ind) < (rest1.site_ind-rest2.site_ind): 
+            return (rest1, rest2)
+        else:
+            return (rest2, rest1)
     else:
-        return (rest1, rest2)
+        if (rest1.site_ind+len(seq)-rest2.site_ind) < (rest2.site_ind-rest1.site_ind): 
+            return (rest2, rest1)
+        else:
+            return (rest1, rest2)
 
 #для проверки совместимости использую оператор % из BioPython, проверяет можно ли лигировать концы получаемые парой рестриктаз
-def check_compatibility (v_1, v_2, d_1, d_2):
-    v_l, v_r = define_left_and_right_restrictase(v_1, v_2)
-    d_l, d_r = define_left_and_right_restrictase(d_1, d_2)
+def check_compatibility (v_1, v_2, d_1, d_2, vec_seq, don_seq):
+    v_l, v_r = define_left_and_right_restrictase(v_1, v_2, vec_seq)
+    d_l, d_r = define_left_and_right_restrictase(d_1, d_2, don_seq)
 
     #контроль расстояния между сайтами
     if (v_r.site_ind - v_l.site_ind-len(v_l.enzyme.site)) <5 or (d_r.site_ind - d_l.site_ind-len(d_l.enzyme.site)) <5:
@@ -153,8 +159,8 @@ def check_compatibility (v_1, v_2, d_1, d_2):
     if v_r.enzyme % d_r.enzyme and v_l.enzyme % d_l.enzyme:
         print()
         if v_r.enzyme % v_l.enzyme: #дополнительно проверяю, не образуют ли вообще все рестриктазы совместимые концы
-        print("ВНИМАНИЕ: Выбранные рестриктазы являются изошизомерами или изокаудомерами друг друга. Высока вероятность залипания вектора/вставки"+
-                        " самих на себя (самолигирования) или встраивания вставки в вектор в обратной ориентации. Рекомендуется выбрать другие рестриктазы")
+            print("ВНИМАНИЕ: Выбранные рестриктазы являются изошизомерами или изокаудомерами друг друга. Высока вероятность залипания вектора/вставки"+
+                            " самих на себя (самолигирования) или встраивания вставки в вектор в обратной ориентации. Рекомендуется выбрать другие рестриктазы")
         print("Рестриктазы подходят")
         return v_l, v_r, d_l, d_r
     else:
@@ -180,7 +186,7 @@ def process (vec_seq, don_seq, v_1, v_2, d_1, d_2):
 
     vec_r1, vec_r2, don_r1, don_r2 = check_all_restrictases(vec_seq, don_seq, v_1, v_2, d_1, d_2)
 
-    v_l, v_r, d_l, d_r = check_compatibility(vec_r1, vec_r2, don_r1, don_r2)
+    v_l, v_r, d_l, d_r = check_compatibility(vec_r1, vec_r2, don_r1, don_r2, vec_seq, don_seq)
 
     final_seq = clone(vec_seq, don_seq, v_l, v_r, d_l, d_r)
 
